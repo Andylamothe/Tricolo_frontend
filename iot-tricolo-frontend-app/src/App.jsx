@@ -1,22 +1,27 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+
+import 'react';
+import{BrowserRouter, Routes, Route} from "react-router-dom";
+import HomePage from './components/HomePage';
 
 function App() {
-  const [count, setCount] = useState(0)
+    return (
+        <BrowserRouter>
 
-  return (
-    <>
-      
-      <h1>Frontend de TriColo</h1>
-      <div className="card">
-      
-  
-      </div>
- 
-    </>
-  )
+            <div>
+                <div>
+                    <Routes>
+                        <Route path="/" element={<HomePage/>}/>
+                        
+
+
+                    </Routes>
+                </div>
+
+
+            </div>
+        </BrowserRouter>
+
+    );
 }
 
-export default App
+export default App;
