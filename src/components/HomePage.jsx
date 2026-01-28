@@ -6,7 +6,7 @@ function HomePage() {
 
             <div>
 
-                 <p>Le frontend est déployé </p>
+                 <p>Test Final  </p>
          
             </div>
         
