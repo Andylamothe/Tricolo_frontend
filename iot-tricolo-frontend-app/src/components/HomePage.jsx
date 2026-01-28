@@ -6,7 +6,7 @@ function HomePage() {
 
             <div>
 
-                 <p>Déploiement du frontend 2</p>
+                 <p>Déploiement du frontend 6 7 </p>
          
             </div>
         
