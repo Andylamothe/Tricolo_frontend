@@ -1,26 +1,21 @@
 
-import 'react';
-import{BrowserRouter, Routes, Route} from "react-router-dom";
-import HomePage from './components/HomePage';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import './App.css';
+import Header from './components/layout/Header';
+import AdminPage from './pages/AdminPage';
+import DashboardPage from './pages/DashboardPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
     return (
         <BrowserRouter>
-
-            <div>
-                <div>
-                    <Routes>
-                        <Route path="/" element={<HomePage/>}/>
-                        
-
-
-                    </Routes>
-                </div>
-
-
-            </div>
+            <Header />
+            <Routes>
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/admin" element={<AdminPage />} />
+                <Route path="*" element={<NotFoundPage />} />
+            </Routes>
         </BrowserRouter>
-
     );
 }
 
