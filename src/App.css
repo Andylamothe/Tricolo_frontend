@@ -1,42 +1,234 @@
 #root {
-  max-width: 1280px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  padding: 12px;
+  min-height: 100vh;
+  animation: fadeIn 0.4s ease-in;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
+@keyframes fadeIn {
   from {
-    transform: rotate(0deg);
+    opacity: 0;
   }
   to {
-    transform: rotate(360deg);
+    opacity: 1;
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-.card {
-  padding: 2em;
+.app-header {
+  padding: 12px 0 16px;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 16px;
+  animation: slideInDown 0.5s ease-out;
+  transition: border-color 0.3s ease;
 }
 
-.read-the-docs {
-  color: #888;
+.app-header:hover {
+  border-bottom-color: #7adf53;
+}
+
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.app-logo:hover {
+  transform: scale(1.05) translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.app-logo:active {
+  transform: scale(1);
+}
+
+.app-logo__img {
+  width: 28px;
+  height: 28px;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.app-logo:hover .app-logo__img {
+  transform: rotate(12deg) scale(1.1);
+  filter: drop-shadow(0 4px 8px rgba(122, 223, 83, 0.3));
+}
+
+.app-logo__text {
+  color: #1f2937;
+  background: linear-gradient(135deg, #7adf53 0%, #38b74e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: all 0.3s ease;
+}
+
+.app-nav__links {
+  display: flex;
+  gap: 12px;
+  color: #374151;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.app-nav__links a {
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  position: relative;
+  display: inline-block;
+}
+
+.app-nav__links a::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #7adf53 0%, #38b74e 100%);
+  transition: width 0.3s ease;
+  border-radius: 999px;
+}
+
+.app-nav__links a:hover {
+  color: #16a34a;
+  background: rgba(122, 223, 83, 0.08);
+  transform: translateY(-2px);
+}
+
+.app-nav__links a:hover::after {
+  width: 100%;
+}
+
+.app-nav__logout {
+  margin-left: auto;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  padding: 6px 12px;
+  font-size: 13px;
+  border: none;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+.app-nav__logout:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+}
+
+.app-nav__logout:active {
+  transform: translateY(0);
+}
+
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: #1f2937;
+}
+
+@media (min-width: 640px) {
+  #root {
+    padding: 16px;
+  }
+
+  .app-header {
+    padding: 12px 0 20px;
+    margin-bottom: 20px;
+  }
+
+  .app-nav {
+    gap: 16px;
+  }
+
+  .app-logo {
+    gap: 8px;
+    font-size: 17px;
+  }
+
+  .app-logo__img {
+    width: 30px;
+    height: 30px;
+  }
+
+  .app-nav__links {
+    gap: 14px;
+    font-size: 15px;
+  }
+
+  .app-nav__links a {
+    padding: 8px 12px;
+  }
+
+  .dashboard {
+    gap: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  #root {
+    padding: 24px;
+  }
+
+  .app-header {
+    padding: 12px 0 20px;
+    margin-bottom: 24px;
+  }
+
+  .app-nav {
+    gap: 24px;
+  }
+
+  .app-logo {
+    gap: 10px;
+    font-size: 18px;
+  }
+
+  .app-logo__img {
+    width: 32px;
+    height: 32px;
+  }
+
+  .app-nav__links {
+    gap: 18px;
+    font-size: 16px;
+  }
+
+  .app-nav__links a {
+    padding: 8px 14px;
+  }
+
+  .app-nav__logout {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+
+  .dashboard {
+    gap: 24px;
+  }
 }
