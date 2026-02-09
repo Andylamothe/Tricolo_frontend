@@ -1,50 +1,46 @@
 import '../styles/dashboard.css';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api } from '../services/api';
 
-const totalStats = {    
-  title: 'TOTAL DES DÉCHETS TRIÉS',
-  value: '252 000',
-  subtitle: 'déchets triés avec succès',
+const CATEGORY_META = {
+  recyclage: { label: 'RECYCLABLE', color: 'green', icon: 'recycling', bottomLabel: 'Taux de recyclage' },
+  compost: { label: 'COMPOST', color: 'orange', icon: 'compost', bottomLabel: 'Taux de compostage' },
+  poubelle: { label: 'POUBELLES', color: 'purple', icon: 'delete' },
+  autre: { label: 'AUTRE (BATTERIES)', color: 'yellow', icon: 'battery_charging_full', bottomLabel: 'Déchets spéciaux' },
 };
 
-const categoryCards = [
-  { label: 'RECYCLABLE', value: '100 000', percent: '40%', color: 'green', icon: 'recycling' },
-  { label: 'COMPOST', value: '75 000', percent: '30%', color: 'orange', icon: 'compost' },
-  { label: 'POUBELLES', value: '45 000', percent: '18%', color: 'purple', icon: 'delete' },
-  { label: 'AUTRE (BATTERIES)', value: '32 000', percent: '13%', color: 'yellow', icon: 'battery_charging_full' },
-];
+const WEEK_DAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
-const weeklyActivity = [
-  { day: 'Lun', value: 32 },
-  { day: 'Mar', value: 44 },
-  { day: 'Mer', value: 38 },
-  { day: 'Jeu', value: 46 },
-  { day: 'Ven', value: 55 },
-  { day: 'Sam', value: 62 },
-  { day: 'Dim', value: 35 },
-];
+function normalizeCategory(value) {
+  return value?.toString().trim().toLowerCase();
+}
 
-const dailyActivity = [
-  { hour: '0h', value: 10 },
-  { hour: '2h', value: 8 },
-  { hour: '4h', value: 6 },
-  { hour: '6h', value: 12 },
-  { hour: '8h', value: 30 },
-  { hour: '10h', value: 44 },
-  { hour: '12h', value: 52 },
-  { hour: '14h', value: 48 },
-  { hour: '16h', value: 60 },
-  { hour: '18h', value: 72 },
-  { hour: '20h', value: 58 },
-  { hour: '22h', value: 28 },
-];
+function parseDechetDate(value) {
+  if (!value) return null;
+  if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
 
-const bottomStats = [
-  { label: 'Taux de recyclage', value: '39.7%', color: 'green', detail: '100 000 déchets' },
-  { label: 'Taux de compostage', value: '29.8%', color: 'orange', detail: '75 000 déchets' },
-  { label: 'Déchets spéciaux', value: '12.7%', color: 'yellow', detail: '32 000 batteries' },
-];
+  const [datePart, timePart] = value.split(' ');
+  if (datePart?.includes('/')) {
+    const [day, month, year] = datePart.split('/');
+    if (!year) return null;
+    const [hour = '0', minute = '0', second = '0'] = (timePart || '').split(':');
+    const date = new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hour),
+      Number(minute),
+      Number(second)
+    );
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  const fallback = new Date(value);
+  return Number.isNaN(fallback.getTime()) ? null : fallback;
+}
 
 export default function DashboardPage() {
   const [dechets, setDechets] = useState(null);
@@ -71,37 +67,128 @@ export default function DashboardPage() {
     fetchData();
   }, []);
 
+  const computedStats = useMemo(() => {
+    const dechetsList = Array.isArray(dechets) ? dechets : [];
+    const statsList = Array.isArray(stats) ? stats : [];
+
+    const totalCount = dechetsList.length;
+    const totalStatsValue = {
+      title: 'TOTAL DES DÉCHETS TRIÉS',
+      value: totalCount.toLocaleString('fr-CA'),
+      subtitle: 'déchets triés avec succès',
+    };
+
+    const statsByCategory = statsList.reduce((acc, item) => {
+      const key = normalizeCategory(item?.categorieAnalyser);
+      if (!key) return acc;
+      acc[key] = item;
+      return acc;
+    }, {});
+
+    const categoryOrder = ['recyclage', 'compost', 'poubelle', 'autre'];
+    const categoryCardsValue = categoryOrder.map((key) => {
+      const meta = CATEGORY_META[key];
+      const item = statsByCategory[key];
+      const count = item?.TotalNumber ?? 0;
+      const ratio = typeof item?.ratio === 'number'
+        ? item.ratio
+        : totalCount > 0
+          ? (count / totalCount) * 100
+          : 0;
+
+      return {
+        label: meta.label,
+        value: count.toLocaleString('fr-CA'),
+        percent: `${ratio.toFixed(2)}%`,
+        color: meta.color,
+        icon: meta.icon,
+      };
+    });
+
+    const weekdayCounts = Array(7).fill(0);
+    const hourlyCounts = Array(24).fill(0);
+
+    dechetsList.forEach((item) => {
+      const date = parseDechetDate(item?.date);
+      if (!date) return;
+      const dayIndex = (date.getDay() + 6) % 7;
+      weekdayCounts[dayIndex] += 1;
+      hourlyCounts[date.getHours()] += 1;
+    });
+
+    const weeklyActivityValue = WEEK_DAYS.map((day, index) => ({
+      day,
+      value: weekdayCounts[index],
+    }));
+
+    const dailyActivityValue = Array.from({ length: 12 }, (_, index) => {
+      const hour = index * 2;
+      const value = hourlyCounts[hour] + (hourlyCounts[hour + 1] || 0);
+      return { hour: `${hour}h`, value };
+    });
+
+    const busiestDayValue = weeklyActivityValue.reduce(
+      (best, current) => (current.value > best.value ? current : best),
+      weeklyActivityValue[0] || { day: '-', value: 0 }
+    );
+
+    const busiestHourValue = dailyActivityValue.reduce(
+      (best, current) => (current.value > best.value ? current : best),
+      dailyActivityValue[0] || { hour: '-', value: 0 }
+    );
+
+    const bottomKeys = ['recyclage', 'compost', 'autre'];
+    const bottomTotal = bottomKeys.reduce((sum, key) => {
+      const item = statsByCategory[key];
+      return sum + (item?.TotalNumber ?? 0);
+    }, 0);
+
+    const bottomStatsValue = bottomKeys
+      .map((key) => {
+        const meta = CATEGORY_META[key];
+        const item = statsByCategory[key];
+        const count = item?.TotalNumber ?? 0;
+        const ratio = bottomTotal > 0 ? (count / bottomTotal) * 100 : 0;
+
+        return {
+          label: meta.bottomLabel,
+          value: `${ratio.toFixed(2)}%`,
+          color: meta.color,
+          detail: `${count.toLocaleString('fr-CA')} déchets`,
+        };
+      })
+      .filter(Boolean);
+
+    return {
+      totalStats: totalStatsValue,
+      categoryCards: categoryCardsValue,
+      weeklyActivity: weeklyActivityValue,
+      dailyActivity: dailyActivityValue,
+      bottomStats: bottomStatsValue,
+      busiestDay: busiestDayValue.day,
+      busiestHour: busiestHourValue.hour,
+    };
+  }, [dechets, stats]);
+
+  const totalStats = computedStats?.totalStats ?? {
+    title: 'TOTAL DES DÉCHETS TRIÉS',
+    value: '0',
+    subtitle: 'déchets triés avec succès',
+  };
+  const categoryCards = computedStats?.categoryCards ?? [];
+  const weeklyActivity = computedStats?.weeklyActivity ?? [];
+  const dailyActivity = computedStats?.dailyActivity ?? [];
+  const bottomStats = computedStats?.bottomStats ?? [];
+  const busiestDay = computedStats?.busiestDay ?? '-';
+  const busiestHour = computedStats?.busiestHour ?? '-';
+
   return (
     <main className="dashboard">
-      {/* Section Test API */}
-      <section style={{ backgroundColor: '#f0f0f0', padding: '20px', margin: '20px', borderRadius: '8px' }}>
-        <h2> Test des Routes Backend</h2>
-        
-        {loading && <p>Chargement...</p>}
-        {error && <p style={{ color: 'red' }}>Erreur: {error}</p>}
-
-        {dechets && (
-          <div>
-            <h3>Dechets (/dechets):</h3>
-            <pre style={{ backgroundColor: '#fff', padding: '10px', borderRadius: '4px', overflow: 'auto' }}>
-              {JSON.stringify(dechets, null, 2)}
-            </pre>
-          </div>
-        )}
-
-        {stats && (
-          <div>
-            <h3>Stats (/stats):</h3>
-            <pre style={{ backgroundColor: '#fff', padding: '10px', borderRadius: '4px', overflow: 'auto' }}>
-              {JSON.stringify(stats, null, 2)}
-            </pre>
-          </div>
-        )}
-      </section>
-
       <div className="dashboard__header">
         <h1>Tableau de Bord</h1>
         <p>Suivi en temps réel de votre tri des déchets</p>
+        {loading && <p>Chargement des données...</p>}
+        {error && <p style={{ color: 'red' }}>Erreur: {error}</p>}
       </div>
 
       <section className="dashboard__hero">
@@ -164,7 +251,7 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
-          <p className="chart-card__note">Jour le plus actif : <strong>Samedi</strong></p>
+          <p className="chart-card__note">Jour le plus actif : <strong>{busiestDay}</strong></p>
         </article>
 
         <article className="chart-card">
@@ -185,7 +272,7 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
-          <p className="chart-card__note">Heure de pointe : <strong>18h</strong></p>
+          <p className="chart-card__note">Heure de pointe : <strong>{busiestHour}</strong></p>
         </article>
       </section>
 
