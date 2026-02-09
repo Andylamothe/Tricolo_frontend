@@ -1,4 +1,6 @@
 import '../styles/dashboard.css';
+import { useEffect, useState } from 'react';
+import { api } from '../services/api';
 
 const totalStats = {    
   title: 'TOTAL DES DÉCHETS TRIÉS',
@@ -45,8 +47,58 @@ const bottomStats = [
 ];
 
 export default function DashboardPage() {
+  const [dechets, setDechets] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const dechetData = await api.getAllDechets();
+        const statsData = await api.getAllStats();
+        setDechets(dechetData);
+        setStats(statsData);
+      } catch (err) {
+        setError(err.message);
+        console.error('Erreur lors de la récupération:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <main className="dashboard">
+      {/* Section Test API */}
+      <section style={{ backgroundColor: '#f0f0f0', padding: '20px', margin: '20px', borderRadius: '8px' }}>
+        <h2> Test des Routes Backend</h2>
+        
+        {loading && <p>Chargement...</p>}
+        {error && <p style={{ color: 'red' }}>Erreur: {error}</p>}
+
+        {dechets && (
+          <div>
+            <h3>Dechets (/dechets):</h3>
+            <pre style={{ backgroundColor: '#fff', padding: '10px', borderRadius: '4px', overflow: 'auto' }}>
+              {JSON.stringify(dechets, null, 2)}
+            </pre>
+          </div>
+        )}
+
+        {stats && (
+          <div>
+            <h3>Stats (/stats):</h3>
+            <pre style={{ backgroundColor: '#fff', padding: '10px', borderRadius: '4px', overflow: 'auto' }}>
+              {JSON.stringify(stats, null, 2)}
+            </pre>
+          </div>
+        )}
+      </section>
+
       <div className="dashboard__header">
         <h1>Tableau de Bord</h1>
         <p>Suivi en temps réel de votre tri des déchets</p>
