@@ -1,6 +1,6 @@
    
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import './App.css';
 import Header from './components/layout/Header';
 import AdminPage from './pages/AdminPage';
