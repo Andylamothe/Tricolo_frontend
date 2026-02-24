@@ -6,9 +6,10 @@ import '../styles/login.css';
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ username: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -18,12 +19,15 @@ export default function LoginPage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError('');
+    setIsLoading(true);
 
     try {
       await login(form);
       navigate('/admin');
     } catch (err) {
       setError(err.message || 'Erreur de connexion');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -46,12 +50,13 @@ export default function LoginPage() {
               <label className="login-form__label">Nom d'utilisateur</label>
               <input
                 type="text"
-                name="email"
+                name="username"
                 className="login-form__input"
                 placeholder="Entrez votre nom d'utilisateur"
-                value={form.email}
+                value={form.username}
                 onChange={handleChange}
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -66,12 +71,14 @@ export default function LoginPage() {
                   value={form.password}
                   onChange={handleChange}
                   required
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   className="login-form__toggle"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? 'Masquer' : 'Afficher'}
+                  disabled={isLoading}
                 >
                   👁️
                 </button>
@@ -80,8 +87,10 @@ export default function LoginPage() {
 
             {error && <div className="login-form__error">{error}</div>}
 
-            <button type="submit" className="login-form__submit">Se connecter</button>
-            <button type="button" className="login-form__cancel" onClick={handleCancel}>
+            <button type="submit" className="login-form__submit" disabled={isLoading}>
+              {isLoading ? 'Connexion en cours...' : 'Se connecter'}
+            </button>
+            <button type="button" className="login-form__cancel" onClick={handleCancel} disabled={isLoading}>
               Annuler
             </button>
           </form>

@@ -10,9 +10,10 @@ const mockBins = [
 
 function AdminLoginForm() {
   const { login } = useAuth();
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ username: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -22,11 +23,14 @@ function AdminLoginForm() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError('');
+    setIsLoading(true);
 
     try {
       await login(form);
     } catch (err) {
       setError(err.message || 'Erreur de connexion');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -44,12 +48,13 @@ function AdminLoginForm() {
             <label className="admin-login__label">Nom d'utilisateur</label>
             <input
               type="text"
-              name="email"
+              name="username"
               className="admin-login__input"
               placeholder="Entrez votre nom d'utilisateur"
-              value={form.email}
+              value={form.username}
               onChange={handleChange}
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -64,11 +69,13 @@ function AdminLoginForm() {
                 value={form.password}
                 onChange={handleChange}
                 required
+                disabled={isLoading}
               />
               <button
                 type="button"
                 className="admin-login__toggle"
                 onClick={() => setShowPassword(!showPassword)}
+                disabled={isLoading}
               >
                 👁️
               </button>
@@ -77,7 +84,9 @@ function AdminLoginForm() {
 
           {error && <div className="admin-login__error">{error}</div>}
 
-          <button type="submit" className="admin-login__submit">Se connecter</button>
+          <button type="submit" className="admin-login__submit" disabled={isLoading}>
+            {isLoading ? 'Connexion en cours...' : 'Se connecter'}
+          </button>
         </form>
 
         <div className="admin-login__footer">Demo: admin / tricolo2024</div>

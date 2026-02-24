@@ -1,12 +1,21 @@
 import { API_BASE_URL } from '../utils/constants';
+import { getToken } from './authService';
 
 async function request(path, options = {}) {
   try {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    };
+
+    // Add authorization token if available
+    const token = getToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await fetch(`${API_BASE_URL}${path}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options.headers || {}),
-      },
+      headers,
       ...options,
     });
 
