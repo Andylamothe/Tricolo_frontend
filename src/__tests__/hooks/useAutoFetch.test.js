@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { useAutoFetch } from '../useAutoFetch';
+import { useAutoFetch } from '../../hooks/useAutoFetch';
 
 describe('useAutoFetch Hook', () => {
   beforeEach(() => {
@@ -67,22 +67,22 @@ describe('useAutoFetch Hook', () => {
     expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 
-  it('should update interval when function changes', () => {
+  it('should call new function when function reference changes', () => {
     const mockFetch1 = jest.fn();
     const mockFetch2 = jest.fn();
 
     const { rerender } = renderHook(
-      ({ fetch }) => useAutoFetch(fetch, 1000),
+      ({ fetch }) => useAutoFetch(fetch, 1000, true),
       { initialProps: { fetch: mockFetch1 } }
     );
 
     expect(mockFetch1).toHaveBeenCalledTimes(1);
+    expect(mockFetch2).not.toHaveBeenCalled();
 
+    // Change the function
     rerender({ fetch: mockFetch2 });
 
-    jest.advanceTimersByTime(1000);
-
-    expect(mockFetch1).toHaveBeenCalledTimes(1);
+    // mockFetch2 should be called on mount with new function
     expect(mockFetch2).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,7 +1,7 @@
-import * as authService from '../authService';
-import * as api from '../api';
+import * as authService from '../../services/authService';
+import * as api from '../../services/api';
 
-jest.mock('../api');
+jest.mock('../../services/api');
 
 const TOKEN_KEY = 'tricolo_token';
 
@@ -53,64 +53,118 @@ describe('Auth Service', () => {
 
   describe('Login', () => {
     it('should successfully login with valid credentials', async () => {
-      const credentials = { email: 'test@test.com', password: 'password123' };
-
+      const mockResponse = {
+        accessToken: 'test-token-123',
+        id: '1',
+        username: 'testuser',
+        email: 'test@test.com'
+      };
+      
+      api.api.post.mockResolvedValueOnce(mockResponse);
+      
+      const credentials = { username: 'testuser', password: 'password123' };
       const result = await authService.login(credentials);
 
       expect(result).toEqual({
-        token: expect.any(String),
+        token: 'test-token-123',
         user: {
-          email: credentials.email,
+          id: '1',
+          username: 'testuser',
+          email: 'test@test.com',
           role: 'admin',
         },
       });
     });
 
-    it('should store token on successful login', async () => {
+    it('should accept email as fallback for username', async () => {
+      const mockResponse = {
+        accessToken: 'test-token-456',
+        id: '2',
+        username: 'test@test.com',
+        email: 'test@test.com'
+      };
+      
+      api.api.post.mockResolvedValueOnce(mockResponse);
+      
       const credentials = { email: 'test@test.com', password: 'password123' };
+      const result = await authService.login(credentials);
 
-      await authService.login(credentials);
-
-      expect(authService.getToken()).toBeTruthy();
+      expect(api.api.post).toHaveBeenCalledWith('/admin', {
+        username: 'test@test.com',
+        password: 'password123'
+      });
+      expect(result.token).toBe('test-token-456');
     });
 
-    it('should throw error when email is missing', async () => {
+    it('should store token on successful login', async () => {
+      const mockResponse = {
+        accessToken: 'stored-token',
+        id: '1',
+        username: 'user',
+        email: 'user@test.com'
+      };
+      
+      api.api.post.mockResolvedValueOnce(mockResponse);
+      
+      const credentials = { username: 'user', password: 'pass' };
+      await authService.login(credentials);
+
+      expect(authService.getToken()).toBe('stored-token');
+    });
+
+    it('should throw error when username/email is missing', async () => {
       const credentials = { password: 'password123' };
 
       await expect(authService.login(credentials)).rejects.toThrow(
-        'Email et mot de passe requis'
+        'Nom d\'utilisateur et mot de passe requis'
       );
     });
 
     it('should throw error when password is missing', async () => {
-      const credentials = { email: 'test@test.com' };
+      const credentials = { username: 'testuser' };
 
       await expect(authService.login(credentials)).rejects.toThrow(
-        'Email et mot de passe requis'
+        'Nom d\'utilisateur et mot de passe requis'
       );
     });
 
-    it('should throw error when both email and password are missing', async () => {
+    it('should throw error when both are missing', async () => {
       await expect(authService.login({})).rejects.toThrow(
-        'Email et mot de passe requis'
+        'Nom d\'utilisateur et mot de passe requis'
       );
     });
 
-    it('should set mock token on login', async () => {
-      localStorage.clear();
-      const credentials = { email: 'admin@test.com', password: 'pass' };
+    it('should throw error when server does not return accessToken', async () => {
+      api.api.post.mockResolvedValueOnce({
+        id: '1',
+        username: 'user'
+        // Missing accessToken
+      });
 
+      const credentials = { username: 'user', password: 'pass' };
+
+      await expect(authService.login(credentials)).rejects.toThrow(
+        'Token non reçu du serveur'
+      );
+    });
+
+    it('should call correct API endpoint', async () => {
+      const mockResponse = {
+        accessToken: 'token',
+        id: '1',
+        username: 'testuser',
+        email: 'test@test.com'
+      };
+      
+      api.api.post.mockResolvedValueOnce(mockResponse);
+      
+      const credentials = { username: 'testuser', password: 'pass123' };
       await authService.login(credentials);
 
-      expect(authService.getToken()).toBe('mock-admin-token');
-    });
-
-    it('should return user with email from credentials', async () => {
-      const credentials = { email: 'custom@email.com', password: 'pass' };
-
-      const result = await authService.login(credentials);
-
-      expect(result.user.email).toBe('custom@email.com');
+      expect(api.api.post).toHaveBeenCalledWith('/admin', {
+        username: 'testuser',
+        password: 'pass123'
+      });
     });
   });
 
@@ -157,35 +211,60 @@ describe('Auth Service', () => {
       expect(authService.getToken()).toBeNull();
 
       // Login
-      const credentials = { email: 'user@test.com', password: 'password' };
+      const mockResponse = {
+        accessToken: 'test-token',
+        id: '1',
+        username: 'user',
+        email: 'user@test.com'
+      };
+      api.api.post.mockResolvedValueOnce(mockResponse);
+
+      const credentials = { username: 'user', password: 'password' };
       const loginResult = await authService.login(credentials);
 
       expect(authService.getToken()).toBeTruthy();
-      expect(loginResult.user.email).toBe('user@test.com');
+      expect(loginResult.user.username).toBe('user');
 
       // Logout
+      api.api.post.mockResolvedValueOnce(undefined);
       await authService.logout();
 
       expect(authService.getToken()).toBeNull();
     });
 
     it('should handle multiple login attempts', async () => {
+      const mockResponse1 = {
+        accessToken: 'token-1',
+        id: '1',
+        username: 'first',
+        email: 'first@test.com'
+      };
+      
+      const mockResponse2 = {
+        accessToken: 'token-2',
+        id: '2',
+        username: 'second',
+        email: 'second@test.com'
+      };
+
+      api.api.post.mockResolvedValueOnce(mockResponse1);
       const firstLogin = await authService.login({
-        email: 'first@test.com',
+        username: 'first',
         password: 'pass1',
       });
       const firstToken = authService.getToken();
 
+      api.api.post.mockResolvedValueOnce(mockResponse2);
       const secondLogin = await authService.login({
-        email: 'second@test.com',
+        username: 'second',
         password: 'pass2',
       });
       const secondToken = authService.getToken();
 
-      expect(firstToken).toBeTruthy();
-      expect(secondToken).toBeTruthy();
-      expect(firstLogin.user.email).toBe('first@test.com');
-      expect(secondLogin.user.email).toBe('second@test.com');
+      expect(firstToken).toBe('token-1');
+      expect(secondToken).toBe('token-2');
+      expect(firstLogin.user.username).toBe('first');
+      expect(secondLogin.user.username).toBe('second');
     });
   });
 });

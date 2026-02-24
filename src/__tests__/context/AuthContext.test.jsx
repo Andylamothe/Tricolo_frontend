@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { AuthProvider, AuthContext } from '../AuthContext';
+import { AuthProvider, AuthContext } from '../../context/AuthContext';
 import * as authService from '../../services/authService';
 import { useContext } from 'react';
 
@@ -60,8 +60,10 @@ describe('AuthContext', () => {
       expect(screen.getByTestId('auth-status')).toHaveTextContent('Not Authenticated');
     });
 
-    it('should initialize with user when token exists', () => {
+    it('should initialize with user when token and user data exist', () => {
+      const mockUser = { email: 'admin@tricolo.local', role: 'admin', username: 'admin' };
       authService.getToken.mockReturnValue('valid-token');
+      localStorage.setItem('tricolo_user', JSON.stringify(mockUser));
 
       render(
         <AuthProvider>

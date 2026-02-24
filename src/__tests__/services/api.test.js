@@ -1,4 +1,4 @@
-import { api } from '../api';
+import { api } from '../../services/api';
 import { API_BASE_URL } from '../../utils/constants';
 
 // Mock global fetch

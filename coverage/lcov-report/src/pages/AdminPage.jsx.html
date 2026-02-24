@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/21</span>
+                <span class='fraction'>0/24</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/8</span>
+                <span class='fraction'>0/10</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/20</span>
+                <span class='fraction'>0/23</span>
             </div>
         
             
@@ -194,7 +194,16 @@
 <a name='L129'></a><a href='#L129'>129</a>
 <a name='L130'></a><a href='#L130'>130</a>
 <a name='L131'></a><a href='#L131'>131</a>
-<a name='L132'></a><a href='#L132'>132</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a>
+<a name='L135'></a><a href='#L135'>135</a>
+<a name='L136'></a><a href='#L136'>136</a>
+<a name='L137'></a><a href='#L137'>137</a>
+<a name='L138'></a><a href='#L138'>138</a>
+<a name='L139'></a><a href='#L139'>139</a>
+<a name='L140'></a><a href='#L140'>140</a>
+<a name='L141'></a><a href='#L141'>141</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -209,21 +218,25 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -264,7 +277,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -337,9 +355,10 @@ const mockBins = <span class="cstat-no" title="statement not covered" >[</span>
 &nbsp;
 function <span class="fstat-no" title="function not covered" >AdminLoginForm(</span>) {
   const { login } = <span class="cstat-no" title="statement not covered" >useAuth();</span>
-  const [form, setForm] = <span class="cstat-no" title="statement not covered" >useState({ email: '', password: '' });</span>
+  const [form, setForm] = <span class="cstat-no" title="statement not covered" >useState({ username: '', password: '' });</span>
   const [showPassword, setShowPassword] = <span class="cstat-no" title="statement not covered" >useState(false);</span>
   const [error, setError] = <span class="cstat-no" title="statement not covered" >useState('');</span>
+  const [isLoading, setIsLoading] = <span class="cstat-no" title="statement not covered" >useState(false);</span>
 &nbsp;
   const handleChange = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(e</span>vent) =&gt; {</span>
     const { name, value } = <span class="cstat-no" title="statement not covered" >event.target;</span>
@@ -349,11 +368,14 @@ function <span class="fstat-no" title="function not covered" >AdminLoginForm(</s
   const handleSubmit = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >as</span>ync (event) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    event.preventDefault();</span>
 <span class="cstat-no" title="statement not covered" >    setError('');</span>
+<span class="cstat-no" title="statement not covered" >    setIsLoading(true);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    try {</span>
 <span class="cstat-no" title="statement not covered" >      await login(form);</span>
     } catch (err) {
 <span class="cstat-no" title="statement not covered" >      setError(err.message || 'Erreur de connexion');</span>
+    } finally {
+<span class="cstat-no" title="statement not covered" >      setIsLoading(false);</span>
     }
   };
 &nbsp;
@@ -371,12 +393,13 @@ function <span class="fstat-no" title="function not covered" >AdminLoginForm(</s
             &lt;label className="admin-login__label"&gt;Nom d'utilisateur&lt;/label&gt;
             &lt;input
               type="text"
-              name="email"
+              name="username"
               className="admin-login__input"
               placeholder="Entrez votre nom d'utilisateur"
-              value={form.email}
+              value={form.username}
               onChange={handleChange}
               required
+              disabled={isLoading}
             /&gt;
           &lt;/div&gt;
 &nbsp;
@@ -391,11 +414,13 @@ function <span class="fstat-no" title="function not covered" >AdminLoginForm(</s
                 value={form.password}
                 onChange={handleChange}
                 required
+                disabled={isLoading}
               /&gt;
               &lt;button
                 type="button"
                 className="admin-login__toggle"
                 onClick={<span class="fstat-no" title="function not covered" >()</span> =&gt; <span class="cstat-no" title="statement not covered" >setShowPassword(!showPassword)}</span>
+                disabled={isLoading}
               &gt;
                 👁️
               &lt;/button&gt;
@@ -404,7 +429,9 @@ function <span class="fstat-no" title="function not covered" >AdminLoginForm(</s
 &nbsp;
           {error &amp;&amp; &lt;div className="admin-login__error"&gt;{error}&lt;/div&gt;}
 &nbsp;
-          &lt;button type="submit" className="admin-login__submit"&gt;Se connecter&lt;/button&gt;
+          &lt;button type="submit" className="admin-login__submit" disabled={isLoading}&gt;
+            {isLoading ? 'Connexion en cours...' : 'Se connecter'}
+          &lt;/button&gt;
         &lt;/form&gt;
 &nbsp;
         &lt;div className="admin-login__footer"&gt;Demo: admin / tricolo2024&lt;/div&gt;
@@ -463,7 +490,7 @@ export default function <span class="fstat-no" title="function not covered" >Adm
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-02-24T01:21:49.740Z
+                at 2026-02-24T02:11:50.064Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

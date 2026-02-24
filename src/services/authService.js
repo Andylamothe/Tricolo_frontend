@@ -25,7 +25,7 @@ export async function login(credentials) {
   }
 
   try {
-    const response = await api.post('/admin/login', {
+    const response = await api.post('/admin', {
       username: loginUsername,
       password
     });
