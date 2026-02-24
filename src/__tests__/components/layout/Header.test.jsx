@@ -1,12 +1,12 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import Header from '../../components/layout/Header';
-import * as AuthContextModule from '../../context/AuthContext';
+import Header from '../../../components/layout/Header';
+import * as AuthContextModule from '../../../context/AuthContext';
 
 // Mock useAuth hook
-jest.mock('../../hooks/useAuth');
+jest.mock('../../../hooks/useAuth');
 
-const mockUseAuth = require('../../hooks/useAuth').useAuth;
+const mockUseAuth = require('../../../hooks/useAuth').useAuth;
 
 describe('Header Component', () => {
   beforeEach(() => {

@@ -25,7 +25,7 @@ export async function login(credentials) {
   }
 
   try {
-    const response = await api.post('/admin', {
+    const response = await api.post('/login', {
       username: loginUsername,
       password
     });
@@ -54,7 +54,7 @@ export async function login(credentials) {
 export async function logout() {
   clearToken();
   try {
-    await api.post('/admin/logout', {});
+    await api.post('/logout', {});
   } catch {
     // Ignore si l'endpoint n'existe pas encore
   }
