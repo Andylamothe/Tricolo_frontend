@@ -3,8 +3,8 @@ import { useAuth } from '../hooks/useAuth';
 import '../styles/admin.css';
 
 const mockBins = [
-  { id: 1, name: 'Bac Recyclage', level: 65, status: 'Disponible', color: 'green' },
-  { id: 2, name: 'Bac Compost', level: 82, status: 'Presque plein', color: 'orange' },
+  { id: 1, name: 'Bac Recyclage', level: 65, status: 'Pas plein', color: 'green' },
+  { id: 2, name: 'Bac Compost', level: 82, status: 'Pas plein', color: 'orange' },
   { id: 3, name: 'Bac Déchets', level: 95, status: 'Plein', color: 'purple' },
 ];
 
@@ -112,12 +112,6 @@ function AdminBinsList() {
 
             <div className="bin-card__level">
               <span className="bin-card__level-label">Niveau de remplissage</span>
-              <div className="bin-card__progress">
-                <div
-                  className="bin-card__progress-bar"
-                  style={{ width: `${bin.level}%` }}
-                />
-              </div>
               <span className="bin-card__percent">
                 {bin.level >= 90 ? 'Plein' : 'Pas plein'}
               </span>
