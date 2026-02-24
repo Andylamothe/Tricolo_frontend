@@ -89,7 +89,7 @@ describe('Auth Service', () => {
       const credentials = { email: 'test@test.com', password: 'password123' };
       const result = await authService.login(credentials);
 
-      expect(api.api.post).toHaveBeenCalledWith('/admin', {
+      expect(api.api.post).toHaveBeenCalledWith('/login', {
         username: 'test@test.com',
         password: 'password123'
       });
@@ -161,7 +161,7 @@ describe('Auth Service', () => {
       const credentials = { username: 'testuser', password: 'pass123' };
       await authService.login(credentials);
 
-      expect(api.api.post).toHaveBeenCalledWith('/admin', {
+      expect(api.api.post).toHaveBeenCalledWith('/login', {
         username: 'testuser',
         password: 'pass123'
       });

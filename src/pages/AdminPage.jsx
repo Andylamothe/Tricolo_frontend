@@ -89,7 +89,6 @@ function AdminLoginForm() {
           </button>
         </form>
 
-        <div className="admin-login__footer">Demo: admin / tricolo2024</div>
       </div>
     </div>
   );
@@ -119,7 +118,9 @@ function AdminBinsList() {
                   style={{ width: `${bin.level}%` }}
                 />
               </div>
-              <span className="bin-card__percent">{bin.level}%</span>
+              <span className="bin-card__percent">
+                {bin.level >= 90 ? 'Plein' : 'Pas plein'}
+              </span>
             </div>
 
             <div className="bin-card__actions">

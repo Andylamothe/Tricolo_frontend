@@ -9,5 +9,5 @@ if (!global.TextDecoder) {
   global.TextDecoder = TextDecoder;
 }
 
-
-
+// Suppress console.error in tests (can be re-enabled per-test if needed)
+jest.spyOn(console, 'error').mockImplementation(() => {});

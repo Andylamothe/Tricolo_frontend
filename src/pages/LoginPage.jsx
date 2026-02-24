@@ -94,10 +94,6 @@ export default function LoginPage() {
               Annuler
             </button>
           </form>
-
-          <div className="login-footer">
-            Demo: admin / tricolo2024
-          </div>
         </div>
       </div>
     </main>
