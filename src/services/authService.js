@@ -15,24 +15,46 @@ export function clearToken() {
 }
 
 export async function login(credentials) {
-  // TODO: remplacer par l'appel backend quand les endpoints seront disponibles
-  // Exemple attendu: await api.post('/auth/login', credentials)
-  const { email, password } = credentials;
+  const { username, password, email } = credentials;
+  
+  // Use username if provided, otherwise fallback to email
+  const loginUsername = username || email;
 
-  if (!email || !password) {
-    throw new Error('Email et mot de passe requis');
+  if (!loginUsername || !password) {
+    throw new Error('Nom d\'utilisateur et mot de passe requis');
   }
 
-  const mockToken = 'mock-admin-token';
-  setToken(mockToken);
-  return { token: mockToken, user: { email, role: 'admin' } };
+  try {
+    const response = await api.post('/admin/login', {
+      username: loginUsername,
+      password
+    });
+
+    if (!response.accessToken) {
+      throw new Error('Token non reçu du serveur');
+    }
+
+    setToken(response.accessToken);
+    
+    // Return user info based on response
+    return { 
+      token: response.accessToken, 
+      user: { 
+        id: response.id,
+        username: response.username,
+        email: response.email,
+        role: 'admin' 
+      } 
+    };
+  } catch (error) {
+    throw new Error(error.message || 'Erreur de connexion');
+  }
 }
 
 export async function logout() {
-  // TODO: appeler le backend si nécessaire
   clearToken();
   try {
-    await api.post('/auth/logout', {});
+    await api.post('/admin/logout', {});
   } catch {
     // Ignore si l'endpoint n'existe pas encore
   }

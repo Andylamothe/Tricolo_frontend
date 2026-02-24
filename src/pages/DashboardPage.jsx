@@ -47,24 +47,35 @@ export default function DashboardPage() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
+  // Fonction pour récupérer les données
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const dechetData = await api.getAllDechets();
+      const statsData = await api.getAllStats();
+      setDechets(dechetData);
+      setStats(statsData);
+      setLastUpdated(new Date());
+    } catch (err) {
+      setError(err.message);
+      console.error('Erreur lors de la récupération:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Auto-refresh toutes les 10 secondes
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const dechetData = await api.getAllDechets();
-        const statsData = await api.getAllStats();
-        setDechets(dechetData);
-        setStats(statsData);
-      } catch (err) {
-        setError(err.message);
-        console.error('Erreur lors de la récupération:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
+    // Chargement initial
     fetchData();
+
+    // Polling automatique
+    const interval = setInterval(fetchData, 10000); // 10 secondes
+
+    // Cleanup
+    return () => clearInterval(interval);
   }, []);
 
   const computedStats = useMemo(() => {
@@ -185,10 +196,33 @@ export default function DashboardPage() {
   return (
     <main className="dashboard">
       <div className="dashboard__header">
-        <h1>Tableau de Bord</h1>
-        <p>Suivi en temps réel de votre tri des déchets</p>
-        {loading && <p>Chargement des données...</p>}
-        {error && <p style={{ color: 'red' }}>Erreur: {error}</p>}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1>Tableau de Bord</h1>
+            <p>Suivi en temps réel de votre tri des déchets</p>
+            {lastUpdated && (
+              <p style={{ fontSize: '0.9em', color: '#666' }}>
+                Dernière mise à jour: {lastUpdated.toLocaleTimeString('fr-FR')}
+              </p>
+            )}
+          </div>
+          <button 
+            onClick={fetchData}
+            disabled={loading}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#4CAF50',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.6 : 1,
+            }}
+          >
+            {loading ? 'Chargement...' : 'Rafraîchir'}
+          </button>
+        </div>
+        {error && <p style={{ color: 'red', marginTop: '10px' }}>Erreur: {error}</p>}
       </div>
 
       <section className="dashboard__hero">
