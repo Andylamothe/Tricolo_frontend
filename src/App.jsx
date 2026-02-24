@@ -1,6 +1,7 @@
    
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react";
 import './App.css';
 import Header from './components/layout/Header';
 import AdminPage from './pages/AdminPage';
@@ -11,6 +12,7 @@ function App() {
     return (
         <BrowserRouter>
             <SpeedInsights />
+            <Analytics />
             <Header />
             <Routes>
                 <Route path="/" element={<DashboardPage />} />
