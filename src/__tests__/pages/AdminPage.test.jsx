@@ -1,12 +1,20 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AdminPage from '../../pages/AdminPage';
-import * as authService from '../../services/authService';
+import { api } from '../../services/api';
 
-jest.mock('../../services/authService');
-jest.mock('../../hooks/useAuth');
+jest.mock('../../services/api', () => ({
+  api: {
+    getAllNotifs: jest.fn(),
+    updateNotif: jest.fn(),
+  },
+}));
 
-const mockUseAuth = require('../../hooks/useAuth').useAuth;
+jest.mock('../../hooks/useAuth', () => ({
+  useAuth: jest.fn(),
+}));
+
+const { useAuth: mockUseAuth } = require('../../hooks/useAuth');
 
 describe('AdminPage', () => {
   beforeEach(() => {
@@ -45,10 +53,10 @@ describe('AdminPage', () => {
         isAuthenticated: true,
         logout: jest.fn(),
       });
+      api.getAllNotifs.mockResolvedValueOnce([]);
 
       render(<AdminPage />);
 
-      // When authenticated, shows bin list with main element
       expect(screen.getByRole('main')).toBeInTheDocument();
       expect(screen.getByText('Gestion des Poubelles')).toBeInTheDocument();
     });
@@ -165,29 +173,70 @@ describe('AdminPage', () => {
         isAuthenticated: true,
         logout: jest.fn(),
       });
+      api.getAllNotifs.mockResolvedValueOnce([]);
 
       render(<AdminPage />);
 
-      // Check for all 3 bin names (each appears once)
+      // Check for all 4 bin names
       expect(screen.getByText('Bac Recyclage')).toBeInTheDocument();
       expect(screen.getByText('Bac Compost')).toBeInTheDocument();
       expect(screen.getByText('Bac Déchets')).toBeInTheDocument();
+      expect(screen.getByText('Bac Autres Déchets')).toBeInTheDocument();
       expect(screen.getByRole('main')).toBeInTheDocument();
     });
 
-    it('should display bin levels when authenticated', () => {
+    it('should display a full alert for bins above the threshold', async () => {
       mockUseAuth.mockReturnValue({
         login: jest.fn(),
         isAuthenticated: true,
         logout: jest.fn(),
       });
+      api.getAllNotifs.mockResolvedValueOnce([]);
 
       render(<AdminPage />);
 
-      // Bins display percentage levels
-      const percentElements = screen.queryAllByText(/%/i);
-      expect(percentElements.length).toBeGreaterThan(0);
-      expect(screen.getByRole('main')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText(/Ce bac là est plein/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should empty a full bin and call the notification API', async () => {
+      const user = userEvent.setup();
+
+      mockUseAuth.mockReturnValue({
+        login: jest.fn(),
+        isAuthenticated: true,
+        logout: jest.fn(),
+      });
+      api.getAllNotifs.mockResolvedValueOnce([
+        { categoriePoubelle: 'poubelle', isFull: true, notifIsSent: false },
+      ]);
+      api.updateNotif.mockResolvedValueOnce({ message: 'Notification mise à jour' });
+
+      render(<AdminPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Ce bac là est plein/i)).toBeInTheDocument();
+      });
+
+      const fullCard = screen.getByText('Bac Déchets').closest('article');
+      const emptyButton = within(fullCard).getByRole('button', { name: /Vider le Bac Déchets/i });
+
+      await user.click(emptyButton);
+
+      await waitFor(() => {
+        expect(api.updateNotif).toHaveBeenCalledWith(
+          'poubelle',
+          expect.objectContaining({
+            categoriePoubelle: 'poubelle',
+            isFull: false,
+            notifIsSent: true,
+          })
+        );
+      });
+
+      expect(screen.getByText(/a été vidé/i)).toBeInTheDocument();
+      expect(screen.queryByText(/Ce bac là est plein/i)).not.toBeInTheDocument();
     });
   });
 

@@ -52,4 +52,8 @@ export const api = {
   // Frontend endpoints
   getAllDechets: () => api.get('/dechets'),
   getAllStats: () => api.get('/stats'),
+  getAllNotifs: () => api.get('/notif'),
+  createNotif: (body) => api.post('/notif', body),
+  updateNotif: (categoriePoubelle, body) =>
+    api.post(`/notif/${categoriePoubelle}`, body),
 };
