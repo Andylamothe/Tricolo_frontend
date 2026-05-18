@@ -1,12 +1,64 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { api } from '../services/api';
 import '../styles/admin.css';
 
-const mockBins = [
-  { id: 1, name: 'Bac Recyclage', level: 65, status: 'Pas plein', color: 'green' },
-  { id: 2, name: 'Bac Compost', level: 82, status: 'Pas plein', color: 'orange' },
-  { id: 3, name: 'Bac Déchets', level: 95, status: 'Plein', color: 'purple' },
+const FULL_THRESHOLD = 90;
+
+const BIN_DEFINITIONS = [
+  { id: 1, category: 'recyclage', name: 'Bac Recyclage', level: 65, color: 'green' },
+  { id: 2, category: 'compost', name: 'Bac Compost', level: 82, color: 'orange' },
+  { id: 3, category: 'poubelle', name: 'Bac Déchets', level: 95, color: 'purple' },
+  { id: 4, category: 'autre', name: 'Bac Autres Déchets', level: 55, color: 'yellow' },
 ];
+
+function buildDefaultBins() {
+  return BIN_DEFINITIONS.map((bin) => {
+    const isFull = bin.level >= FULL_THRESHOLD;
+
+    return {
+      ...bin,
+      isFull,
+      status: isFull ? 'Ce bac là est plein' : 'Bac disponible',
+      statusLabel: isFull ? 'Plein' : 'Disponible',
+      percent: `${bin.level}%`,
+    };
+  });
+}
+
+function latestNotificationsByCategory(notifications) {
+  return (Array.isArray(notifications) ? notifications : []).reduce((acc, notification) => {
+    const category = notification?.categoriePoubelle;
+    if (!category) {
+      return acc;
+    }
+
+    acc[category] = notification;
+    return acc;
+  }, {});
+}
+
+function mergeNotificationState(bins, notifications) {
+  const notificationsByCategory = latestNotificationsByCategory(notifications);
+
+  return bins.map((bin) => {
+    const notification = notificationsByCategory[bin.category];
+    if (!notification || typeof notification.isFull !== 'boolean') {
+      return bin;
+    }
+
+    const isFull = notification.isFull;
+
+    return {
+      ...bin,
+      isFull,
+      status: isFull ? 'Ce bac là est plein' : 'Bac disponible',
+      statusLabel: isFull ? 'Plein' : 'Disponible',
+      level: isFull ? Math.max(bin.level, FULL_THRESHOLD) : 0,
+      percent: isFull ? `${Math.max(bin.level, FULL_THRESHOLD)}%` : '0%',
+    };
+  });
+}
 
 function AdminLoginForm() {
   const { login } = useAuth();
@@ -95,31 +147,122 @@ function AdminLoginForm() {
 }
 
 function AdminBinsList() {
+  const [bins, setBins] = useState(() => buildDefaultBins());
+  const [loading, setLoading] = useState(true);
+  const [pendingCategory, setPendingCategory] = useState(null);
+  const [feedback, setFeedback] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadNotifications = async () => {
+      try {
+        const notifications = await api.getAllNotifs();
+        if (!isMounted) {
+          return;
+        }
+
+        setBins((currentBins) => mergeNotificationState(currentBins, notifications));
+      } catch (error) {
+        console.error('Erreur lors du chargement des notifications:', error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadNotifications();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const fullBins = useMemo(() => bins.filter((bin) => bin.isFull), [bins]);
+
+  const handleEmptyBin = async (bin) => {
+    setPendingCategory(bin.category);
+    setFeedback(`Le ${bin.name.toLowerCase()} a été vidé.`);
+
+    setBins((currentBins) =>
+      currentBins.map((currentBin) =>
+        currentBin.category === bin.category
+          ? {
+              ...currentBin,
+              level: 0,
+              isFull: false,
+              status: 'Bac disponible',
+              statusLabel: 'Disponible',
+              percent: '0%',
+            }
+          : currentBin
+      )
+    );
+
+    try {
+      await api.updateNotif(bin.category, {
+        categoriePoubelle: bin.category,
+        isFull: false,
+        notifIsSent: true,
+      });
+    } catch (error) {
+      console.error(`Impossible de mettre à jour la notification pour ${bin.category}:`, error);
+    } finally {
+      setPendingCategory(null);
+    }
+  };
+
   return (
     <main className="admin-bins">
       <div className="admin-bins__header">
         <h1>Gestion des Poubelles</h1>
         <p>État en temps réel de vos bacs de tri</p>
+        <div className="admin-bins__summary" role="status" aria-live="polite">
+          {fullBins.length > 0
+            ? `${fullBins.length} bac${fullBins.length > 1 ? 's' : ''} en alerte : ${fullBins
+                .map((bin) => bin.name)
+                .join(', ')}`
+            : 'Tous les bacs sont disponibles'}
+        </div>
+        {feedback && <div className="admin-bins__message">{feedback}</div>}
       </div>
 
       <section className="admin-bins__grid">
-        {mockBins.map((bin) => (
+        {bins.map((bin) => (
           <article key={bin.id} className={`bin-card bin-card--${bin.color}`}>
             <div className="bin-card__header">
               <h3 className="bin-card__name">{bin.name}</h3>
-              <span className="bin-card__status">{bin.status}</span>
+              <span
+                className={`bin-card__status ${bin.isFull ? 'bin-card__status--full' : 'bin-card__status--available'}`}
+              >
+                {bin.status}
+              </span>
             </div>
 
             <div className="bin-card__level">
               <span className="bin-card__level-label">Niveau de remplissage</span>
-              <span className="bin-card__percent">
-                {bin.level >= 90 ? 'Plein' : 'Pas plein'}
-              </span>
+              <div className="bin-card__progress" aria-hidden="true">
+                <div
+                  className="bin-card__progress-bar"
+                  style={{ width: `${Math.min(bin.level, 100)}%` }}
+                />
+              </div>
+              <span className="bin-card__percent">{bin.percent}</span>
             </div>
 
+            {bin.isFull && <div className="bin-card__alert">Action requise : videz ce bac</div>}
+
             <div className="bin-card__actions">
-              <button className="bin-card__btn">Détails</button>
-              <button className="bin-card__btn">Vider</button>
+              <button
+                type="button"
+                className="bin-card__btn bin-card__btn--danger"
+                onClick={() => handleEmptyBin(bin)}
+                disabled={loading || pendingCategory === bin.category}
+                aria-label={`Vider le ${bin.name}`}
+              >
+                {pendingCategory === bin.category ? 'Vidage...' : 'Vider cette poubelle'}
+              </button>
             </div>
           </article>
         ))}

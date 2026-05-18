@@ -114,5 +114,40 @@ describe('API Service', () => {
         expect.any(Object)
       );
     });
+
+    it('should call getAllNotifs endpoint', async () => {
+      const mockData = [];
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockData),
+      });
+
+      await api.getAllNotifs();
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${API_BASE_URL}/notif`,
+        expect.any(Object)
+      );
+    });
+
+    it('should call updateNotif endpoint with category', async () => {
+      const payload = { isFull: false, notifIsSent: true };
+
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ message: 'ok' }),
+      });
+
+      await api.updateNotif('poubelle', payload);
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${API_BASE_URL}/notif/poubelle`,
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify(payload),
+        })
+      );
+    });
   });
 });
