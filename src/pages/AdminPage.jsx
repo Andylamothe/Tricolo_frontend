@@ -3,27 +3,25 @@ import { useAuth } from '../hooks/useAuth';
 import { api } from '../services/api';
 import '../styles/admin.css';
 
-const FULL_THRESHOLD = 90;
-
 const BIN_DEFINITIONS = [
-  { id: 1, category: 'recyclage', name: 'Bac Recyclage', level: 65, color: 'green' },
-  { id: 2, category: 'compost', name: 'Bac Compost', level: 82, color: 'orange' },
-  { id: 3, category: 'poubelle', name: 'Bac Déchets', level: 95, color: 'purple' },
-  { id: 4, category: 'autre', name: 'Bac Autres Déchets', level: 55, color: 'yellow' },
+  { id: 1, category: 'recyclage', name: 'Bac Recyclage', color: 'green' },
+  { id: 2, category: 'compost', name: 'Bac Compost', color: 'orange' },
+  { id: 3, category: 'poubelle', name: 'Bac Déchets', color: 'purple' },
+  { id: 4, category: 'autre', name: 'Bac Autres Déchets', color: 'yellow' },
 ];
 
-function buildDefaultBins() {
-  return BIN_DEFINITIONS.map((bin) => {
-    const isFull = bin.level >= FULL_THRESHOLD;
+function withFillState(bin, isFull) {
+  return {
+    ...bin,
+    isFull,
+    status: isFull ? 'Ce bac là est plein' : 'Bac disponible',
+    fillState: isFull ? 'Rempli' : 'Non rempli',
+    hint: isFull ? 'Action recommandee: vider ce bac.' : 'Aucune action requise.',
+  };
+}
 
-    return {
-      ...bin,
-      isFull,
-      status: isFull ? 'Ce bac là est plein' : 'Bac disponible',
-      statusLabel: isFull ? 'Plein' : 'Disponible',
-      percent: `${bin.level}%`,
-    };
-  });
+function buildDefaultBins() {
+  return BIN_DEFINITIONS.map((bin) => withFillState(bin, false));
 }
 
 function latestNotificationsByCategory(notifications) {
@@ -47,16 +45,7 @@ function mergeNotificationState(bins, notifications) {
       return bin;
     }
 
-    const isFull = notification.isFull;
-
-    return {
-      ...bin,
-      isFull,
-      status: isFull ? 'Ce bac là est plein' : 'Bac disponible',
-      statusLabel: isFull ? 'Plein' : 'Disponible',
-      level: isFull ? Math.max(bin.level, FULL_THRESHOLD) : 0,
-      percent: isFull ? `${Math.max(bin.level, FULL_THRESHOLD)}%` : '0%',
-    };
+    return withFillState(bin, notification.isFull);
   });
 }
 
@@ -187,16 +176,7 @@ function AdminBinsList() {
 
     setBins((currentBins) =>
       currentBins.map((currentBin) =>
-        currentBin.category === bin.category
-          ? {
-              ...currentBin,
-              level: 0,
-              isFull: false,
-              status: 'Bac disponible',
-              statusLabel: 'Disponible',
-              percent: '0%',
-            }
-          : currentBin
+        currentBin.category === bin.category ? withFillState(currentBin, false) : currentBin
       )
     );
 
@@ -241,14 +221,13 @@ function AdminBinsList() {
             </div>
 
             <div className="bin-card__level">
-              <span className="bin-card__level-label">Niveau de remplissage</span>
-              <div className="bin-card__progress" aria-hidden="true">
-                <div
-                  className="bin-card__progress-bar"
-                  style={{ width: `${Math.min(bin.level, 100)}%` }}
-                />
+              <span className="bin-card__level-label">Etat du bac</span>
+              <div className="bin-card__state" aria-live="polite">
+                <span className={`bin-card__state-pill ${bin.isFull ? 'bin-card__state-pill--full' : 'bin-card__state-pill--clear'}`}>
+                  {bin.fillState}
+                </span>
+                <span className="bin-card__state-hint">{bin.hint}</span>
               </div>
-              <span className="bin-card__percent">{bin.percent}</span>
             </div>
 
             {bin.isFull && <div className="bin-card__alert">Action requise : videz ce bac</div>}
@@ -256,12 +235,16 @@ function AdminBinsList() {
             <div className="bin-card__actions">
               <button
                 type="button"
-                className="bin-card__btn bin-card__btn--danger"
+                className={`bin-card__btn ${bin.isFull ? 'bin-card__btn--danger' : 'bin-card__btn--idle'}`}
                 onClick={() => handleEmptyBin(bin)}
-                disabled={loading || pendingCategory === bin.category}
+                disabled={loading || pendingCategory === bin.category || !bin.isFull}
                 aria-label={`Vider le ${bin.name}`}
               >
-                {pendingCategory === bin.category ? 'Vidage...' : 'Vider cette poubelle'}
+                {pendingCategory === bin.category
+                  ? 'Vidage...'
+                  : bin.isFull
+                    ? 'Vider cette poubelle'
+                    : 'Bac deja vide'}
               </button>
             </div>
           </article>

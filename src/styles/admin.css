@@ -362,7 +362,7 @@
 .bin-card__level {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .bin-card__level-label {
@@ -371,48 +371,37 @@
   font-weight: 600;
 }
 
-.bin-card__progress {
-  width: 100%;
-  height: 8px;
-  background: #e5e7eb;
+.bin-card__state {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.bin-card__state-pill {
+  align-self: flex-start;
+  padding: 4px 10px;
   border-radius: 999px;
-  overflow: hidden;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.bin-card__progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
-  border-radius: 999px;
-  animation: fillBar 1.5s ease-out;
-  animation-fill-mode: both;
-  transition: all 0.3s ease;
-}
-
-@keyframes fillBar {
-  from {
-    width: 0;
-  }
-}
-
-.bin-card:nth-child(2) .bin-card__progress-bar {
-  background: linear-gradient(90deg, #fb923c 0%, #f97316 100%);
-  animation-delay: 0.1s;
-}
-
-.bin-card:nth-child(3) .bin-card__progress-bar {
-  background: linear-gradient(90deg, #a855f7 0%, #7c3aed 100%);
-  animation-delay: 0.2s;
-}
-
-.bin-card:hover .bin-card__progress-bar {
-  filter: brightness(1.1);
-}
-
-.bin-card__percent {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
-  color: #1f2937;
+}
+
+.bin-card__state-pill--full {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+.bin-card__state-pill--clear {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.bin-card__state-hint {
+  font-size: 13px;
+  color: #4b5563;
 }
 
 .bin-card__alert {
@@ -449,6 +438,12 @@
   color: #ffffff;
 }
 
+.bin-card__btn--idle {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+  color: #9ca3af;
+}
+
 .bin-card__btn:hover {
   background: #e5e7eb;
   transform: translateY(-2px);
@@ -460,6 +455,13 @@
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   border-color: #dc2626;
   box-shadow: 0 8px 18px rgba(239, 68, 68, 0.2);
+}
+
+.bin-card__btn--idle:hover {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+  box-shadow: none;
+  transform: none;
 }
 
 .bin-card__btn:disabled {

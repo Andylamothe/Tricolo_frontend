@@ -12,8 +12,12 @@ try {
 }
 
 // Fallback to environment variable or default
+if (!API_BASE_URL && typeof process !== 'undefined') {
+  API_BASE_URL = process.env?.VITE_API_BASE_URL;
+}
+
 if (!API_BASE_URL) {
-  API_BASE_URL = process.env.VITE_API_BASE_URL || 'https://iotbackend-4ufq.onrender.com/api';
+  API_BASE_URL = 'https://iotbackend-4ufq.onrender.com/api';
 }
 
 export { API_BASE_URL };
