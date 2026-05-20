@@ -185,7 +185,24 @@ describe('AdminPage', () => {
       expect(screen.getByRole('main')).toBeInTheDocument();
     });
 
-    it('should display a full alert for bins above the threshold', async () => {
+    it('should display a full alert when backend marks a bin as full', async () => {
+      mockUseAuth.mockReturnValue({
+        login: jest.fn(),
+        isAuthenticated: true,
+        logout: jest.fn(),
+      });
+      api.getAllNotifs.mockResolvedValueOnce([
+        { categoriePoubelle: 'poubelle', isFull: true, notifIsSent: false },
+      ]);
+
+      render(<AdminPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Ce bac là est plein/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should display boolean fill labels without percentage', async () => {
       mockUseAuth.mockReturnValue({
         login: jest.fn(),
         isAuthenticated: true,
@@ -196,8 +213,11 @@ describe('AdminPage', () => {
       render(<AdminPage />);
 
       await waitFor(() => {
-        expect(screen.getByText(/Ce bac là est plein/i)).toBeInTheDocument();
+        expect(screen.getAllByText('Non rempli').length).toBeGreaterThan(0);
       });
+
+      expect(screen.queryByText(/\d+%/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Niveau de remplissage/i)).not.toBeInTheDocument();
     });
 
     it('should empty a full bin and call the notification API', async () => {
@@ -237,6 +257,45 @@ describe('AdminPage', () => {
 
       expect(screen.getByText(/a été vidé/i)).toBeInTheDocument();
       expect(screen.queryByText(/Ce bac là est plein/i)).not.toBeInTheDocument();
+    });
+
+    it('should accept backend alias recyclabe for recyclage notifications', async () => {
+      const user = userEvent.setup();
+
+      mockUseAuth.mockReturnValue({
+        login: jest.fn(),
+        isAuthenticated: true,
+        logout: jest.fn(),
+      });
+      api.getAllNotifs.mockResolvedValueOnce([
+        { categoriePoubelle: 'recyclabe', isFull: true, notifIsSent: false },
+      ]);
+      api.updateNotif.mockResolvedValueOnce({ message: 'Notification mise à jour' });
+
+      render(<AdminPage />);
+
+      const recyclingCard = screen.getByText('Bac Recyclage').closest('article');
+      await waitFor(() => {
+        expect(within(recyclingCard).getByText('Ce bac là est plein')).toBeInTheDocument();
+      });
+
+      const emptyButton = within(recyclingCard).getByRole('button', { name: /Vider le Bac Recyclage/i });
+      await waitFor(() => {
+        expect(emptyButton).toBeEnabled();
+      });
+
+      await user.click(emptyButton);
+
+      await waitFor(() => {
+        expect(api.updateNotif).toHaveBeenCalledWith(
+          'recyclage',
+          expect.objectContaining({
+            categoriePoubelle: 'recyclage',
+            isFull: false,
+            notifIsSent: true,
+          })
+        );
+      });
     });
   });
 
