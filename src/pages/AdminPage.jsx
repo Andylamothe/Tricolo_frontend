@@ -4,11 +4,15 @@ import { api } from '../services/api';
 import '../styles/admin.css';
 
 const BIN_DEFINITIONS = [
-  { id: 1, category: 'recyclage', name: 'Bac Recyclage', color: 'green' },
+  { id: 1, category: 'recyclage', apiCategory: 'recyclabe', name: 'Bac Recyclage', color: 'green' },
   { id: 2, category: 'compost', name: 'Bac Compost', color: 'orange' },
   { id: 3, category: 'poubelle', name: 'Bac Déchets', color: 'purple' },
   { id: 4, category: 'autre', name: 'Bac Autres Déchets', color: 'yellow' },
 ];
+
+function getBackendCategory(bin) {
+  return bin.apiCategory || bin.category;
+}
 
 function withFillState(bin, isFull) {
   return {
@@ -40,7 +44,7 @@ function mergeNotificationState(bins, notifications) {
   const notificationsByCategory = latestNotificationsByCategory(notifications);
 
   return bins.map((bin) => {
-    const notification = notificationsByCategory[bin.category];
+    const notification = notificationsByCategory[getBackendCategory(bin)];
     if (!notification || typeof notification.isFull !== 'boolean') {
       return bin;
     }
@@ -171,6 +175,7 @@ function AdminBinsList() {
   const fullBins = useMemo(() => bins.filter((bin) => bin.isFull), [bins]);
 
   const handleEmptyBin = async (bin) => {
+    const backendCategory = getBackendCategory(bin);
     setPendingCategory(bin.category);
     setFeedback(`Le ${bin.name.toLowerCase()} a été vidé.`);
 
@@ -181,8 +186,8 @@ function AdminBinsList() {
     );
 
     try {
-      await api.updateNotif(bin.category, {
-        categoriePoubelle: bin.category,
+      await api.updateNotif(backendCategory, {
+        categoriePoubelle: backendCategory,
         isFull: false,
         notifIsSent: true,
       });

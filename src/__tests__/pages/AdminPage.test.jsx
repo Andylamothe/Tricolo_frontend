@@ -258,6 +258,42 @@ describe('AdminPage', () => {
       expect(screen.getByText(/a été vidé/i)).toBeInTheDocument();
       expect(screen.queryByText(/Ce bac là est plein/i)).not.toBeInTheDocument();
     });
+
+    it('should use backend alias recyclabe for the recyclage bin', async () => {
+      const user = userEvent.setup();
+
+      mockUseAuth.mockReturnValue({
+        login: jest.fn(),
+        isAuthenticated: true,
+        logout: jest.fn(),
+      });
+      api.getAllNotifs.mockResolvedValueOnce([
+        { categoriePoubelle: 'recyclabe', isFull: true, notifIsSent: false },
+      ]);
+      api.updateNotif.mockResolvedValueOnce({ message: 'Notification mise à jour' });
+
+      render(<AdminPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Bac Recyclage')).toBeInTheDocument();
+      });
+
+      const recyclingCard = screen.getByText('Bac Recyclage').closest('article');
+      const emptyButton = within(recyclingCard).getByRole('button', { name: /Vider le Bac Recyclage/i });
+
+      await user.click(emptyButton);
+
+      await waitFor(() => {
+        expect(api.updateNotif).toHaveBeenCalledWith(
+          'recyclabe',
+          expect.objectContaining({
+            categoriePoubelle: 'recyclabe',
+            isFull: false,
+            notifIsSent: true,
+          })
+        );
+      });
+    });
   });
 
   describe('password toggle', () => {
