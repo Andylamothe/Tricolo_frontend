@@ -259,7 +259,7 @@ describe('AdminPage', () => {
       expect(screen.queryByText(/Ce bac là est plein/i)).not.toBeInTheDocument();
     });
 
-    it('should use backend alias recyclabe for the recyclage bin', async () => {
+    it('should accept backend alias recyclabe for recyclage notifications', async () => {
       const user = userEvent.setup();
 
       mockUseAuth.mockReturnValue({
@@ -274,20 +274,23 @@ describe('AdminPage', () => {
 
       render(<AdminPage />);
 
+      const recyclingCard = screen.getByText('Bac Recyclage').closest('article');
       await waitFor(() => {
-        expect(screen.getByText('Bac Recyclage')).toBeInTheDocument();
+        expect(within(recyclingCard).getByText('Ce bac là est plein')).toBeInTheDocument();
       });
 
-      const recyclingCard = screen.getByText('Bac Recyclage').closest('article');
       const emptyButton = within(recyclingCard).getByRole('button', { name: /Vider le Bac Recyclage/i });
+      await waitFor(() => {
+        expect(emptyButton).toBeEnabled();
+      });
 
       await user.click(emptyButton);
 
       await waitFor(() => {
         expect(api.updateNotif).toHaveBeenCalledWith(
-          'recyclabe',
+          'recyclage',
           expect.objectContaining({
-            categoriePoubelle: 'recyclabe',
+            categoriePoubelle: 'recyclage',
             isFull: false,
             notifIsSent: true,
           })

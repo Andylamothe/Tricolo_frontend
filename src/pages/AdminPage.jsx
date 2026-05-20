@@ -4,7 +4,7 @@ import { api } from '../services/api';
 import '../styles/admin.css';
 
 const BIN_DEFINITIONS = [
-  { id: 1, category: 'recyclage', apiCategory: 'recyclabe', name: 'Bac Recyclage', color: 'green' },
+  { id: 1, category: 'recyclage', apiCategory: 'recyclage', apiCategoryAliases: ['recyclabe'], name: 'Bac Recyclage', color: 'green' },
   { id: 2, category: 'compost', name: 'Bac Compost', color: 'orange' },
   { id: 3, category: 'poubelle', name: 'Bac Déchets', color: 'purple' },
   { id: 4, category: 'autre', name: 'Bac Autres Déchets', color: 'yellow' },
@@ -14,13 +14,17 @@ function getBackendCategory(bin) {
   return bin.apiCategory || bin.category;
 }
 
+function getBackendCategories(bin) {
+  return [getBackendCategory(bin), ...(bin.apiCategoryAliases || [])];
+}
+
 function withFillState(bin, isFull) {
   return {
     ...bin,
     isFull,
     status: isFull ? 'Ce bac là est plein' : 'Bac disponible',
     fillState: isFull ? 'Rempli' : 'Non rempli',
-    hint: isFull ? 'Action recommandee: vider ce bac.' : 'Aucune action requise.',
+    hint: isFull ? 'Action recommandée: vider ce bac.' : 'Aucune action requise.',
   };
 }
 
@@ -44,8 +48,11 @@ function mergeNotificationState(bins, notifications) {
   const notificationsByCategory = latestNotificationsByCategory(notifications);
 
   return bins.map((bin) => {
-    const notification = notificationsByCategory[getBackendCategory(bin)];
-    if (!notification || typeof notification.isFull !== 'boolean') {
+    const notification = getBackendCategories(bin)
+      .map((category) => notificationsByCategory[category])
+      .find((item) => item && typeof item.isFull === 'boolean');
+
+    if (!notification) {
       return bin;
     }
 
@@ -226,7 +233,7 @@ function AdminBinsList() {
             </div>
 
             <div className="bin-card__level">
-              <span className="bin-card__level-label">Etat du bac</span>
+              <span className="bin-card__level-label">État du bac</span>
               <div className="bin-card__state" aria-live="polite">
                 <span className={`bin-card__state-pill ${bin.isFull ? 'bin-card__state-pill--full' : 'bin-card__state-pill--clear'}`}>
                   {bin.fillState}
@@ -249,7 +256,7 @@ function AdminBinsList() {
                   ? 'Vidage...'
                   : bin.isFull
                     ? 'Vider cette poubelle'
-                    : 'Bac deja vide'}
+                    : 'Bac déjà vide'}
               </button>
             </div>
           </article>

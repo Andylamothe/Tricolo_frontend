@@ -1,25 +1,10 @@
-// Get API base URL from environment
-let API_BASE_URL;
+const viteApiBaseUrl = typeof globalThis !== 'undefined' ? globalThis.__VITE_ENV_API_BASE_URL__ : undefined;
+const processApiBaseUrl = typeof globalThis !== 'undefined' ? globalThis.process?.env?.VITE_API_BASE_URL : undefined;
 
-// Try to get from Vite
-try {
-  // This will work in browser/Vite environment
-  if (typeof globalThis !== 'undefined' && globalThis.__VITE_ENV_API_BASE_URL__) {
-    API_BASE_URL = globalThis.__VITE_ENV_API_BASE_URL__;
-  }
-} catch (e) {
-  // Fallback
-}
+const resolvedApiBaseUrl = [viteApiBaseUrl, processApiBaseUrl].find(
+  (value) => typeof value === 'string' && value.trim() !== '' && !/^%VITE_[A-Z0-9_]+%$/.test(value)
+);
 
-// Fallback to environment variable or default
-if (!API_BASE_URL && typeof process !== 'undefined') {
-  API_BASE_URL = process.env?.VITE_API_BASE_URL;
-}
-
-if (!API_BASE_URL) {
-  API_BASE_URL = 'https://iotbackend-4ufq.onrender.com/api';
-}
+const API_BASE_URL = resolvedApiBaseUrl || 'https://iotbackend-4ufq.onrender.com/api';
 
 export { API_BASE_URL };
-
-
