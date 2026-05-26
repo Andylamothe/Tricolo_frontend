@@ -137,6 +137,62 @@ npm run preview
 
 ---
 
+## 🔗 Lier les 3 repos Tricolo (monorepo ou submodules)
+
+Un script est fourni pour créer un repo racine Tricolo et y connecter **frontend**, **backend** et **iot** dans `apps/`.
+
+### 1) Préparer les URLs et branches
+
+- URL Git frontend
+- URL Git backend
+- URL Git iot
+- Branche de chaque repo (ex: `main`)
+- Choix d'intégration:
+  - `monorepo` (git subtree)
+  - `submodules` (git submodule)
+
+### 2) Lancer le script
+
+```bash
+./scripts/link-tricolo-repos.sh \
+  --mode monorepo \
+  --target-dir ../Tricolo \
+  --frontend-url <FRONTEND_GIT_URL> \
+  --backend-url <BACKEND_GIT_URL> \
+  --iot-url <IOT_GIT_URL> \
+  --frontend-branch main \
+  --backend-branch main \
+  --iot-branch main \
+  --preserve-history true
+```
+
+Pour utiliser des submodules:
+
+```bash
+./scripts/link-tricolo-repos.sh \
+  --mode submodules \
+  --target-dir ../Tricolo \
+  --frontend-url <FRONTEND_GIT_URL> \
+  --backend-url <BACKEND_GIT_URL> \
+  --iot-url <IOT_GIT_URL>
+```
+
+### 3) Résultat
+
+Le repo racine cible contient:
+
+```text
+Tricolo/
+└── apps/
+    ├── frontend/
+    ├── backend/
+    └── iot/
+```
+
+Le script génère aussi un fichier `REPOSITORIES.md` dans le repo racine avec le mapping des URLs et branches.
+
+---
+
 ## 🌍 Déploiement
 
 **Lien du déploiement actuel :**
